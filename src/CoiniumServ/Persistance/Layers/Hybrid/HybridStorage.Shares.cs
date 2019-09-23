@@ -1,23 +1,29 @@
 ﻿#region License
 // 
+//     MIT License
+//
 //     CoiniumServ - Crypto Currency Mining Pool Server Software
-//     Copyright (C) 2013 - 2014, CoiniumServ Project - http://www.coinium.org
-//     http://www.coiniumserv.com - https://github.com/CoiniumServ/CoiniumServ
+//     Copyright (C) 2013 - 2017, CoiniumServ Project
+//     Hüseyin Uslu, shalafiraistlin at gmail dot com
+//     https://github.com/bonesoul/CoiniumServ
 // 
-//     This software is dual-licensed: you can redistribute it and/or modify
-//     it under the terms of the GNU General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
-// 
-//     This program is distributed in the hope that it will be useful,
-//     but WITHOUT ANY WARRANTY; without even the implied warranty of
-//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//     GNU General Public License for more details.
-//    
-//     For the terms of this license, see licenses/gpl_v3.txt.
-// 
-//     Alternatively, you can license this software under a commercial
-//     license or white-label it as set out in licenses/commercial.txt.
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 // 
 #endregion
 
@@ -44,29 +50,31 @@ namespace CoiniumServ.Persistance.Layers.Hybrid
                 //_client.StartPipe(); // batch the commands.
 
                 // add the share to round 
-                var currentKey = string.Format("{0}:shares:round:current", _coin);
+                var currentKey = $"{_coin}:shares:round:current";
                 var miner = (IStratumMiner)share.Miner;
-                _redisProvider.Client.HIncrByFloat(currentKey, miner.Username, (double)miner.Difficulty);
+                _redisProvider.Client.HIncrByFloat(currentKey, miner.Username, (double)share.Difficulty);
+                //_redisProvider.Client.HIncrByFloat(currentKey, share.Miner.Username, share.Difficulty);
 
                 // increment shares stats.
-                var statsKey = string.Format("{0}:stats", _coin);
+                var statsKey = $"{_coin}:stats";
                 _redisProvider.Client.HIncrBy(statsKey, share.IsValid ? "validShares" : "invalidShares", 1);
 
                 // add to hashrate
                 if (share.IsValid)
                 {
-                    var hashrateKey = string.Format("{0}:hashrate", _coin);
+                    var hashrateKey = $"{_coin}:hashrate";
                     var randomModifier = Convert.ToString(miner.ValidShareCount, 16).PadLeft(8, '0');
                     string modifiedUsername = miner.Username + randomModifier;
+                    //var entry = $"{share.Difficulty}:{share.Miner.Username}";
                     var entry = string.Format("{0}:{1}", (double)miner.Difficulty, modifiedUsername);
-                    _redisProvider.Client.ZAdd(hashrateKey, Tuple.Create(TimeHelpers.NowInUnixTimestamp(), entry));
+                    _redisProvider.Client.ZAdd(hashrateKey, Tuple.Create((double)TimeHelpers.NowInUnixTimestamp(), entry));
                 }
 
                 //_client.EndPipe(); // execute the batch commands.
             }
             catch (Exception e)
             {
-                _logger.Error("An exception occured while comitting share: {0:l}", e.Message);
+                _logger.Error("An exception occurred while committing share: {0:l}", e.Message);
             }
         }
 
@@ -84,7 +92,7 @@ namespace CoiniumServ.Persistance.Layers.Hybrid
             }
             catch (Exception e)
             {
-                _logger.Error("An exception occured while moving shares for new block: {0:l}", e.Message);
+                _logger.Error("An exception occurred while moving shares for new block: {0:l}", e.Message);
             }
         }
 
@@ -115,7 +123,7 @@ namespace CoiniumServ.Persistance.Layers.Hybrid
             }
             catch (Exception e)
             {
-                _logger.Error("An exception occured while moving shares: {0:l}", e.Message);
+                _logger.Error("An exception occurred while moving shares: {0:l}", e.Message);
             }
         }
 
@@ -132,7 +140,7 @@ namespace CoiniumServ.Persistance.Layers.Hybrid
             }
             catch (Exception e)
             {
-                _logger.Error("An exception occured while deleting shares: {0:l}", e.Message);
+                _logger.Error("An exception occurred while deleting shares: {0:l}", e.Message);
             }
         }
 
@@ -155,7 +163,7 @@ namespace CoiniumServ.Persistance.Layers.Hybrid
             }
             catch (Exception e)
             {
-                _logger.Error("An exception occured while getting shares for current round: {0:l}", e.Message);
+                _logger.Error("An exception occurred while getting shares for current round: {0:l}", e.Message);
             }
 
             return shares;
@@ -180,7 +188,7 @@ namespace CoiniumServ.Persistance.Layers.Hybrid
             }
             catch (Exception e)
             {
-                _logger.Error("An exception occured while getting shares for round; {0:l}", e.Message);
+                _logger.Error("An exception occurred while getting shares for round; {0:l}", e.Message);
             }
 
             return shares;

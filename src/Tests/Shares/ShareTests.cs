@@ -1,25 +1,32 @@
 ﻿#region License
 // 
+//     MIT License
+//
 //     CoiniumServ - Crypto Currency Mining Pool Server Software
-//     Copyright (C) 2013 - 2014, CoiniumServ Project - http://www.coinium.org
-//     http://www.coiniumserv.com - https://github.com/CoiniumServ/CoiniumServ
+//     Copyright (C) 2013 - 2017, CoiniumServ Project
+//     Hüseyin Uslu, shalafiraistlin at gmail dot com
+//     https://github.com/bonesoul/CoiniumServ
 // 
-//     This software is dual-licensed: you can redistribute it and/or modify
-//     it under the terms of the GNU General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
-// 
-//     This program is distributed in the hope that it will be useful,
-//     but WITHOUT ANY WARRANTY; without even the implied warranty of
-//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//     GNU General Public License for more details.
-//    
-//     For the terms of this license, see licenses/gpl_v3.txt.
-// 
-//     Alternatively, you can license this software under a commercial
-//     license or white-label it as set out in licenses/commercial.txt.
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 // 
 #endregion
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -102,6 +109,7 @@ namespace CoiniumServ.Tests.Shares
             // daemon client
             _daemonClient = Substitute.For<IDaemonClient>();
             _daemonClient.ValidateAddress(Arg.Any<string>()).Returns(new ValidateAddress { IsValid = true });
+            // _daemonClient.GetAddressInfo(Arg.Any<string>()).Returns(new GetAddressInfo { IsValid = true });
 
             // block template
             const string json = "{\"result\":{\"version\":1,\"previousblockhash\":\"1c4eb88e47564cb796b5c6648c74bec51d7215ac12fc4168b14827aac74a8062\",\"transactions\":[{\"data\":\"010000000332a82e92f522deee69b09e27858ba9b87585f2a4913ef71018df40909032fdc3000000006a473044022019ca05cb880a04f0d842268b7e75ac6d2695fc544df033e3daeb29239251a8970220031f6336767f2ea617347484e1290ec0bdcc71056ea2d3084e75384905250ec50121030dd394118fb66ca288bff71d8ea762678783b005770f7f9ba4128233191e0847ffffffff086747cbd339b21b950774186091653a7b8f5751b00a906ff6f5561b3a6fcee6010000006b4830450221009ae1ba9a216d313cc592fc2c1ef08f1e0e555a32b6c1b305f685ac882d38356b0220243106bbb5bb76dde142e574cba8f30c1e2f7059e8e9161770396fbd2b50420f0121030dd394118fb66ca288bff71d8ea762678783b005770f7f9ba4128233191e0847ffffffffe2f15804b1e41c36c925c6f64f219b2bdb3c9fbff4c97a4f0e8c7f31d7e6f2af000000006b48304502200be8894fdd7f5c19be248a979c08bbf2395f606e038c3e02c0266474c03699ab022100ff5de87086e487410f5d7b68012655ca6d814f0caeb9ca42d9c425a90f68b3030121030dd394118fb66ca288bff71d8ea762678783b005770f7f9ba4128233191e0847ffffffff02a0f01900000000001976a9141c50209a1dfdf53313d237b75e9aeb553ca1dfda88ac00e1f505000000001976a914cbb9a3e7a7c1651b1006f876f08b40be85b274f588ac00000000\",\"hash\":\"dc3a80ec6c45aa489453b2c4abf6761eb6656d949e26d01793458c166640e5f3\",\"depends\":[],\"fee\":0,\"sigops\":2}],\"coinbaseaux\":{\"flags\":\"062f503253482f\"},\"coinbasevalue\":5000000000,\"target\":\"00000048d4f70000000000000000000000000000000000000000000000000000\",\"mintime\":1403691059,\"mutable\":[\"time\",\"transactions\",\"prevblock\"],\"noncerange\":\"00000000ffffffff\",\"sigoplimit\":20000,\"sizelimit\":1000000,\"curtime\":1403691825,\"bits\":\"1d48d4f7\",\"height\":315152},\"error\":null,\"id\":1}";

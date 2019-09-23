@@ -1,23 +1,28 @@
 ﻿#region License
-// 
+//     MIT License
+//
 //     CoiniumServ - Crypto Currency Mining Pool Server Software
-//     Copyright (C) 2013 - 2014, CoiniumServ Project - http://www.coinium.org
-//     http://www.coiniumserv.com - https://github.com/CoiniumServ/CoiniumServ
+//     Copyright (C) 2013 - 2017, CoiniumServ Project
+//     Hüseyin Uslu, shalafiraistlin at gmail dot com
+//     https://github.com/bonesoul/CoiniumServ
 // 
-//     This software is dual-licensed: you can redistribute it and/or modify
-//     it under the terms of the GNU General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
-// 
-//     This program is distributed in the hope that it will be useful,
-//     but WITHOUT ANY WARRANTY; without even the implied warranty of
-//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//     GNU General Public License for more details.
-//    
-//     For the terms of this license, see licenses/gpl_v3.txt.
-// 
-//     Alternatively, you can license this software under a commercial
-//     license or white-label it as set out in licenses/commercial.txt.
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 // 
 #endregion
 
@@ -28,12 +33,11 @@ using System.Reflection;
 using System.Text;
 using CoiniumServ.Coin.Config;
 using CoiniumServ.Daemon.Config;
+using CoiniumServ.Daemon.Converters;
 using CoiniumServ.Daemon.Errors;
 using CoiniumServ.Daemon.Exceptions;
 using CoiniumServ.Logging;
 using CoiniumServ.Utils.Extensions;
-using libCoiniumServ.Versions;
-using Metrics;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -52,19 +56,17 @@ namespace CoiniumServ.Daemon
 
         private readonly ILogger _logger;
 
-        private static readonly Meter RequestsMeter = Metric.Meter("[Daemon] Requests", Unit.Requests, TimeUnit.Seconds);
-
         public DaemonBase(IDaemonConfig daemonConfig, ICoinConfig coinConfig, IRpcExceptionFactory rpcExceptionFactory)
         {
             _rpcExceptionFactory = rpcExceptionFactory;
             _logger = LogManager.PacketLogger.ForContext<DaemonClient>().ForContext("Component", coinConfig.Name);
 
             _timeout = daemonConfig.Timeout * 1000; // set the daemon timeout.
-        	
+
             RpcUrl = string.Format("http://{0}:{1}", daemonConfig.Host, daemonConfig.Port);
             RpcUser = daemonConfig.Username;
             RpcPassword = daemonConfig.Password;
-            
+
             RequestCounter = 0;
         }
 
@@ -129,13 +131,11 @@ namespace CoiniumServ.Daemon
         /// <returns>The HTTP request object.</returns>
         private HttpWebRequest MakeHttpRequest(DaemonRequest walletRequest)
         {
-            RequestsMeter.Mark();
-
             var webRequest = (HttpWebRequest)WebRequest.Create(RpcUrl);
             webRequest.Credentials = new NetworkCredential(RpcUser, RpcPassword);
 
             // Important, otherwise the service can't deserialse your request properly
-            webRequest.UserAgent = string.Format("CoiniumServ {0:} {1:}", VersionInfo.CodeName, Assembly.GetAssembly(typeof (Program)).GetName().Version);
+            webRequest.UserAgent = string.Format("CoiniumServ {0:} {1:}", VersionInfo.CodeName, Assembly.GetAssembly(typeof(Program)).GetName().Version);
             webRequest.ContentType = "application/json-rpc";
             webRequest.Method = "POST";
             webRequest.Timeout = _timeout;
@@ -162,7 +162,7 @@ namespace CoiniumServ.Daemon
             catch (Exception exception)
             {
                 webRequest = null;
-                throw _rpcExceptionFactory.GetRpcException("An unknown exception occured while making json request.", exception);                
+                throw _rpcExceptionFactory.GetRpcException("An unknown exception occured while making json request.", exception);
             }
         }
 
@@ -176,11 +176,14 @@ namespace CoiniumServ.Daemon
         {
             string json = GetJsonResponse(httpWebRequest);
 
-            _logger.Verbose("rx: {0}", json.PrettifyJson());
+            // process response with converter. needed for all coin wallets which gives non-standard info.
+            string jsonLC = PropertyConverter.DeserializeWithLowerCasePropertyNames(json).ToString();
+
+            _logger.Verbose("rx: {0}", jsonLC.PrettifyJson());
 
             try
             {
-                return JsonConvert.DeserializeObject<DaemonResponse<T>>(json);
+                return JsonConvert.DeserializeObject<DaemonResponse<T>>(jsonLC);
             }
             catch (JsonException jsonEx)
             {
